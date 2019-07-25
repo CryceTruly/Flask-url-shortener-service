@@ -4,6 +4,7 @@ from .extensions import db
 from .models import Link
 from flask_cors import CORS
 from urllib.parse import urlparse
+import validators
 short = Blueprint('short', __name__)
 
 CORS(short)
@@ -28,10 +29,17 @@ def add_link():
     original_url = data.get('original_url', None)
     if not original_url:
         return jsonify({"Error": "please supply an original url!"}), 400
-    link = Link(original_url=original_url['url'])
+
+    link = Link.query.filter_by(original_url=original_url).first()
+    if link:
+        return jsonify({"Error": "Already a shortened link"}), 400
+    if not validators.url(original_url):
+        return jsonify({"Error": "The link is Invalid"}), 400
+
+    link = Link(original_url=original_url)
     db.session.add(link)
     db.session.commit()
-    return jsonify({"new_link": request.url_root+link.short_url, "original_url": link.original_url})
+    return jsonify({"new_link": request.url_root+link.short_url, "original_url": link.original_url}), 201
 
 
 @short.route('/stats')
@@ -40,7 +48,7 @@ def stats():
     json_data = []
     for link in links:
         newLink = {"visits": link.visits,
-                   "original": link.original_url, "short": request.url_root+link.short_url}
+                   "original": link.original_url, "short": request.url_root+link.short_url, "id": link.id}
         json_data.append(newLink)
 
     return jsonify({"stats": json_data})
@@ -48,4 +56,4 @@ def stats():
 
 @short.errorhandler(404)
 def page_not_found(e):
-    return jsonify('not found'), 404
+    return jsonify({"Error": 'not found'}), 404
