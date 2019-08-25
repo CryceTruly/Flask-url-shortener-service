@@ -9,6 +9,7 @@ python-dotenv = "*"
 flask-sqlalchemy = "*"
 validators = "*"
 flask-cors = "*"
+gunicorn = "*"
 
 [dev-packages]
 pydocstyle = "*"
