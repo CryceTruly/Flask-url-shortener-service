@@ -20,7 +20,7 @@ def redirect_to_url(short_url):
 
 @short.route('/')
 def index():
-    return render_template('index.html')
+    return jsonify({"message":"welcome to the api service"})
 
 
 @short.route('/add_link', methods=['POST'])
